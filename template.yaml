@@ -1,0 +1,67 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  cdk-client-snapstart-error-poc
+
+  Reproduce an error with SDK client initialization
+
+Globals:
+  Function:
+    Timeout: 2
+    MemorySize: 512
+
+Resources:
+  SampleParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: myValue
+      Type: String
+      Value: "sample content"
+
+  IdempotencyTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: expiration
+        Enabled: true
+      BillingMode: PAY_PER_REQUEST
+
+  PocFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: PocFunction
+      Handler: poc.App::handleRequest
+      Runtime: java17
+      SnapStart:
+        ApplyOn: PublishedVersions
+      AutoPublishAlias: live
+      Tracing: Active
+      Environment:
+        Variables:
+          POWERTOOLS_LOG_LEVEL: INFO
+          POWERTOOLS_LOGGER_LOG_EVENT: true
+          POWERTOOLS_METRICS_NAMESPACE: cdk-client-snapstart-error-poc
+          PARAMETER_NAME: !Ref SampleParameter
+          IDEMPOTENCY_TABLE: !Ref IdempotencyTable
+      Policies:
+        - SSMParameterReadPolicy:
+            ParameterName: !Ref SampleParameter
+        - DynamoDBCrudPolicy:
+            TableName: !Ref IdempotencyTable
+      Events:
+        InvokeTst:
+          Type: Api
+          Properties:
+            Path: /test
+            Method: get
+
+Outputs:
+  TestApi:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/test/"

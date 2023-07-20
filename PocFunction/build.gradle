@@ -1,0 +1,28 @@
+plugins {
+    id 'java'
+    id 'io.freefair.aspectj.post-compile-weaving' version '8.1.0'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // The version added by the aspectj-Gradle-plugin 8.0.1 does not support Java 17
+    aspect 'software.amazon.lambda:powertools-idempotency:1.16.1'
+
+    implementation 'org.aspectj:aspectjrt:1.9.19'
+    implementation 'com.amazonaws:aws-lambda-java-core:1.2.2'
+    implementation 'com.fasterxml.jackson.core:jackson-annotations:2.14.2'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.14.2'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.14.0'
+    implementation 'com.amazonaws:aws-lambda-java-events:3.11.0'
+    implementation 'software.amazon.lambda:powertools-tracing:1.16.1'
+    implementation 'software.amazon.lambda:powertools-logging:1.16.1'
+    implementation 'software.amazon.lambda:powertools-metrics:1.16.1'
+    implementation 'software.amazon.lambda:powertools-parameters:1.16.1'
+    implementation 'software.amazon.lambda:powertools-idempotency:1.16.1'
+}
+
+sourceCompatibility = 17
+targetCompatibility = 17
